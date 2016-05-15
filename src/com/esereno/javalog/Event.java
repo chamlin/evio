@@ -125,9 +125,10 @@ public String toString () {
     sb.append (createElement ("timestamp", timestamp.toString ()));
     sb.append (createElement ("type", type.toString ()));
     sb.append (createElement ("level", level));
-    if (values.containsKey ("code"))
-        for (String code : values.get ("code"))
-            sb.append (createElement ("code", code));
+    for (String key : values.keySet ()) {
+        for (String value : values.get (key))
+            sb.append (createElement (key, value));
+    }
     StringBuffer lines = new StringBuffer ();
     for (String line : rawLines) {
         lines.append (line);
