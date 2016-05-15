@@ -5,71 +5,59 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.regex.*;
+import java.time.LocalDateTime;
+
 
 public class Parser {
-
-    public static enum lineType {
-        ERROR,
-        TIMESTAMP,
-        APPSERVER,
-        APPSERVER_CONTINUE,
-        TRACE_EVENT,
-        SYSTEM
-    };
-
 
     private static Pattern timestampParse
         = Pattern.compile ("(\\d\\d\\d\\d-\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d\\.\\d+) (\\S+):\\s+(.*)[\r\n]*");
     private static Pattern appserverContinueParse = Pattern.compile ("([a-zA-Z-_]+): ( in |   ).*");
     private static Pattern appserverParse = Pattern.compile ("([a-zA-Z-_]+): (.*)");
+    private static Pattern threadParse = Pattern.compile ("^(Thread \\d|#\\d)");
     private static Pattern eventTraceParse = Pattern.compile ("\\[Event:id=([^]]+)\\].*");
 
     private static Pattern codeParse = Pattern.compile ("(([A-Z]+|X509)-[A-Z]+): ");
 
+    private static Event defaultEvent = new Event ();
+
+    private static LocalDateTime defaultDateTime = LocalDateTime.of (1900, 1, 1, 0, 0, 0);;
+
     /**
-    * Do a little work to see what type it is, before we try to go further.
+    * Parse the line to an Event
     */
-    public static lineType preparse (Map<String,String> results, String s) {
-        lineType type = lineType.ERROR;
-        results.clear ();
+    public Event preparse (String s) {
+        Event e = defaultEvent;
         Matcher timestampMatcher = timestampParse.matcher (s);
         // timestamped line, or system line
         if (timestampMatcher.matches ()) {
 
             String timestamp = timestampMatcher.group (1);
+            LocalDateTime dateTime = LocalDateTime.parse (timestamp.replaceAll (" ", "T"));
             String level = timestampMatcher.group (2);
             String text = timestampMatcher.group (3);
 
-            results.put ("timestamp", timestamp);
-            results.put ("level", level);
-            results.put ("text", text);
-            results.put ("line", s);
+            e = new Event (dateTime, Event.lineType.TIMESTAMP, level, s);
 
             Matcher appserverParseMatcher = appserverParse.matcher (text);
             Matcher eventTraceMatcher = eventTraceParse.matcher (text);
 
             if (appserverParseMatcher.matches ()) {
                 // TODO this might be overoptimistic.  can know for sure on a continuation.
-                results.put ("appserver", appserverParseMatcher.group (1));
+                e.addCode ("appserver", appserverParseMatcher.group (1));
                 text = appserverParseMatcher.group (2);
-                results.put ("text", text);
     
                 if (text.startsWith ("  ") || text.startsWith ("in "))
-                    type = lineType.APPSERVER_CONTINUE;
-                else
-                    type = lineType.APPSERVER;
+                    e.setAppServerContinued (true);
             } else if (eventTraceMatcher.matches ()) {
-                results.put ("event", eventTraceMatcher.group (1));
-                type = lineType.TRACE_EVENT;
-            } else {
-                type = lineType.TIMESTAMP;
+                e.addCode ("event", eventTraceMatcher.group (1));
             }
-            
+        } else if (threadParse.matcher (s).matches ()) {
+            e = new Event (defaultDateTime, Event.lineType.THREAD, s);
         } else {
-            results.put ("line", s);
-            type = lineType.SYSTEM;
+            e = new Event (defaultDateTime, Event.lineType.SYSTEM, s);
         }
-        return type;
+        return e;
     }
 
     public static List<String> getCodes (String text) {
@@ -78,6 +66,7 @@ public class Parser {
         Matcher codeMatcher = codeParse.matcher (text);
 
         while (codeMatcher.find()) {
+            matches.add ("code");
             matches.add (codeMatcher.group (1));
         }
 
@@ -87,9 +76,8 @@ public class Parser {
     public static void main (String[] args) {
         Parser p = new Parser ();
         String line = "2016-02-11 00:16:15.167 Debug: LDAP user s060222 found in login cache";
-        Map<String,String> results = new HashMap<String,String> ();
-        p.preparse (results, line);
-        System.out.println (results);
+        Event e = p.preparse (line);
+        System.out.println (e);
     }
 
 
