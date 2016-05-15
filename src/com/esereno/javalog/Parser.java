@@ -44,13 +44,13 @@ public class Parser {
 
             if (appserverParseMatcher.matches ()) {
                 // TODO this might be overoptimistic.  can know for sure on a continuation.
-                e.addCode ("appserver", appserverParseMatcher.group (1));
+                e.addValue ("appserver", appserverParseMatcher.group (1));
                 text = appserverParseMatcher.group (2);
     
                 if (text.startsWith ("  ") || text.startsWith ("in "))
                     e.setAppServerContinued (true);
             } else if (eventTraceMatcher.matches ()) {
-                e.addCode ("event", eventTraceMatcher.group (1));
+                e.addValue ("event", eventTraceMatcher.group (1));
             }
         } else if (threadParse.matcher (s).matches ()) {
             e = new Event (defaultDateTime, Event.lineType.THREAD, s);

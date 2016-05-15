@@ -17,7 +17,7 @@ public class Event {
 
     private LocalDateTime timestamp = LocalDateTime.of (1900, 1, 1, 0, 0, 0);
     private lineType type = lineType.UNKNOWN;
-    private List<String> codes = new ArrayList<String> ();
+    private HashMap<String,ArrayList<String>> values = new HashMap<String,ArrayList<String>> ();
     private List<String> rawLines = new ArrayList<String> ();
     private String level = "Info";
     private boolean appServerContinued = false;
@@ -44,17 +44,23 @@ public Event (LocalDateTime _timestamp, lineType _type, String _level, String _l
     rawLines.add (_line);
 }
 
-public Event (LocalDateTime _timestamp, lineType _type, List<String> _lines, List<String> _codes, String _level) {
+public Event (LocalDateTime _timestamp, lineType _type, List<String> _lines, HashMap<String,ArrayList<String>> _values, String _level) {
     // timestamp = LocalDateTime.parse (timestamp.replace (' ', 'T'));
     timestamp = _timestamp;
     type = _type;
     rawLines = _lines;
-    codes = _codes;
+    values = _values;
     level = _level;
 }
 
-public void addCode (String code, String value) {
-    codes.add (code);  codes.add (value);
+public void addValue (String key, String value) {
+    if (! values.containsKey (key)) {
+        ArrayList<String> al = new ArrayList<String> ();
+        al.add (value);
+        values.put (key, al);
+    } else {
+        values.get (key).add (value);
+    }
 }
 
 public boolean getAppServerContinued () {
@@ -69,17 +75,26 @@ public void addLine (String line) {
     rawLines.add (line);
 }
 
+private static String createElement (String qname, String content) {
+    StringBuffer sb = new StringBuffer ("<" + qname + "><![CDATA[");
+    sb.append (content);
+    sb.append ("]]></" + qname + ">");
+    return sb.toString ();
+}
+
 public String toString () {
-    return 
-        timestamp.toString () + "\n" +
-        rawLines + "\n" +
-        codes
-    ;
+    StringBuffer sb = new StringBuffer ("<event xmlns='http://esereno.com/logging#event'>");
+    sb.append (createElement ("timestamp", timestamp.toString ()));
+    if (values.containsKey ("code"))
+        for (String code : values.get ("code"))
+            sb.append (createElement ("code", code));
+    sb.append ("</event>");
+    return sb.toString ();
 }
 
 public static void main (String[] args) {
 
-    System.out.println (new Event ());
+    System.out.println (createElement ("forest", "Documents-f1"));
     
 }
 
