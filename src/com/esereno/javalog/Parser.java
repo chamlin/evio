@@ -26,7 +26,7 @@ public class Parser {
     /**
     * Parse the line to an Event
     */
-    public Event preparse (String s) {
+    public Event parse (String filename, int lineNumber, String s) {
         Event e = defaultEvent;
         Matcher timestampMatcher = timestampParse.matcher (s);
         // timestamped line, or system line
@@ -37,7 +37,8 @@ public class Parser {
             String level = timestampMatcher.group (2);
             String text = timestampMatcher.group (3);
 
-            e = new Event (dateTime, Event.lineType.TIMESTAMP, level, s);
+            e = new Event (dateTime, Event.eventType.TIMESTAMP, level, s);
+            e.setSource (filename, lineNumber);
 
             Matcher appserverParseMatcher = appserverParse.matcher (text);
             Matcher eventTraceMatcher = eventTraceParse.matcher (text);
@@ -53,9 +54,9 @@ public class Parser {
                 e.addValue ("event", eventTraceMatcher.group (1));
             }
         } else if (threadParse.matcher (s).matches ()) {
-            e = new Event (defaultDateTime, Event.lineType.THREAD, s);
+            e = new Event (defaultDateTime, Event.eventType.THREAD, s);
         } else {
-            e = new Event (defaultDateTime, Event.lineType.SYSTEM, s);
+            e = new Event (defaultDateTime, Event.eventType.SYSTEM, s);
         }
         return e;
     }
@@ -76,7 +77,7 @@ public class Parser {
     public static void main (String[] args) {
         Parser p = new Parser ();
         String line = "2016-02-11 00:16:15.167 Debug: LDAP user s060222 found in login cache";
-        Event e = p.preparse (line);
+        Event e = p.parse ("foo", 1, line);
         System.out.println (e);
     }
 

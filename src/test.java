@@ -1,5 +1,6 @@
 import java.util.Map;
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.io.FileReader;
 import java.io.BufferedReader;
 import com.esereno.javalog.*;
@@ -7,30 +8,42 @@ import com.esereno.javalog.*;
 public class test {
 
 public static void main (String[] args) throws Exception {
-    Map<String,String> parts = new HashMap<String,String>();
-    Parser.lineType e;
+
+    String filename = "ErrorLog.txt";
 
     String line;
-    BufferedReader br = new BufferedReader(new FileReader("test.txt"));
-    Event bufferedEvent = null;
+    Parser p = new Parser ();
+    BufferedReader br = new BufferedReader(new FileReader(filename));
+    ArrayList<Event> bufferedEvents = new ArrayList<Event>();
+    ArrayList<Event> threadEvent = null;
+    int lineNumber = 0;
     while ((line = br.readLine()) != null) {
-        // System.out.println("---------------------------------");
-        e = Parser.preparse (parts, line);
-        // System.out.println (e + "\n" + line + "\n" + parts + "\n");
-        // have to take care of sys lines at some time
-        if (bufferedEvent == null) 
-            bufferedEvent = new Event (parts);
-        else if (e == Parser.lineType.APPSERVER_CONTINUE) {
-            bufferedEvent.addLine (parts.get ("line"));
-        } else {
-            System.out.println (bufferedEvent);
-            bufferedEvent = new Event (parts);
+        Event e = p.parse (filename, lineNumber, line);
+        if (bufferedEvents.isEmpty ()) {
+            bufferedEvents.add (e);
+            continue;
         }
+        switch (e.getEventType ()) {
+            case TIMESTAMP:
+                if (e.getAppServerContinued ())
+                    (bufferedEvents.get (bufferedEvents.size() - 1)).mergeLines (e);
+                else
+                    bufferedEvents.add (e);
+                break;
+            default:
+                break;
+        }
+        System.out.println("---------------------------------");
+        System.out.println(e);
+        System.out.println("---------------------------------");
+    }
+    
+    for (Event e : bufferedEvents) {
+        // System.out.println("---------------------------------");
+        // System.out.println (e);
         // System.out.println("---------------------------------");
     }
-    System.out.println (bufferedEvent);
 
-    
 }
 
 }
