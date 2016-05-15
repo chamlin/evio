@@ -25,11 +25,11 @@ public class Multiinsert {
     ExecutorService pool;
 	DatabaseClient client;
 
-    public Multiinsert (String host, int port, String un, String pw) {
+    public Multiinsert (String host, int port, String db, String un, String pw) {
 
         pool = java.util.concurrent.Executors.newFixedThreadPool(poolSize);
 
-		client = DatabaseClientFactory.newClient ("localhost", 8000, "Documents", "admin", "admin", Authentication.DIGEST);
+		client = DatabaseClientFactory.newClient (host, port, db, un, pw, Authentication.DIGEST);
     }
 
     public void insertDoc (String doc) {
@@ -37,7 +37,7 @@ public class Multiinsert {
     }
 
     public void shutdown () {
-        System.err.print ("shutting down pool . . . \n");
+        System.err.print ("shutting down pool, wait to drain . . . \n");
         pool.shutdown();
 		// release the client
         while (true) { 
@@ -52,27 +52,6 @@ public class Multiinsert {
         System.err.print ("\n");
     }
 
-
-	public static void main(String[] args) throws IOException, InterruptedException {
-
-        Multiinsert mi = new Multiinsert ("localhost", 8000, "admin", "admin");
-
-        System.err.println ("<");
-
-		for (int i = 0; i < 300; i++) {
-		    String s = "<doc>" + i + "</doc>";
-            mi.insertDoc (s);
-        }
-
-        System.err.println (">");
-
-        mi.shutdown ();
-
-        System.err.println (">>");
-
-
-        System.err.println (">>>");
-	}
 
     private class inserter implements Runnable {
 
@@ -104,6 +83,20 @@ public class Multiinsert {
             insertDocument ();
         }
     }
+
+	public static void main(String[] args) throws IOException, InterruptedException {
+
+        Multiinsert mi = new Multiinsert ("localhost", 8000, "Documents", "admin", "admin");
+
+        System.err.println ("<");
+
+		for (int i = 0; i < 300; i++) {
+		    String s = "<doc>" + i + "</doc>";
+            mi.insertDoc (s);
+        }
+
+        mi.shutdown ();
+	}
 
 }
 

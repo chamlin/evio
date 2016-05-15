@@ -9,26 +9,30 @@ public class test {
 
 public static void main (String[] args) throws Exception {
 
+    Multiinsert inserter = new Multiinsert ("localhost", 8000, "Documents", "admin", "admin");
+
     String filename = "ErrorLog.txt";
 
     String line;
     Parser p = new Parser ();
     BufferedReader br = new BufferedReader(new FileReader(filename));
     ArrayList<Event> bufferedEvents = new ArrayList<Event>();
+    Event bufferedEvent = null;
     ArrayList<Event> threadEvent = null;
     int linenumber = 0;
     while ((line = br.readLine()) != null) {
         Event e = p.parse (filename, linenumber++, line);
-        if (bufferedEvents.isEmpty ()) {
-            bufferedEvents.add (e);
+        if (bufferedEvent == null) {
+            bufferedEvent = e;
             continue;
         }
         switch (e.getEventType ()) {
             case TIMESTAMP:
                 if (e.getAppServerContinued ())
-                    (bufferedEvents.get (bufferedEvents.size() - 1)).mergeLines (e);
+                    bufferedEvent.mergeLines (e);
                 else
-                    bufferedEvents.add (e);
+                    inserter.insertDoc (e.toString ());
+                    bufferedEvent = e;
                 break;
             default:
                 break;
@@ -37,12 +41,9 @@ public static void main (String[] args) throws Exception {
         System.out.println(e);
         System.out.println("---------------------------------");
     }
+
+    inserter.shutdown ();
     
-    for (Event e : bufferedEvents) {
-        // System.out.println("---------------------------------");
-        // System.out.println (e);
-        // System.out.println("---------------------------------");
-    }
 
 }
 
