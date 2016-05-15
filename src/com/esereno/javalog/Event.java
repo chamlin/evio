@@ -34,11 +34,11 @@ public class Event {
     private eventType type = eventType.UNKNOWN;
     private HashMap<String,ArrayList<String>> values = new HashMap<String,ArrayList<String>> ();
     private ArrayList<String> rawLines = new ArrayList<String> ();
-    private String level = "Info";
+    private String level = null;
     private boolean appServerContinued = false;
 
     private String filename = "unknown";
-    private int lineNumber = 0;
+    private int linenumber = 0;
 
 public Event () {
     // timestamp = LocalDateTime.parse (timestamp.replace (' ', 'T'));
@@ -73,9 +73,9 @@ public Event (LocalDateTime _timestamp, eventType _type, ArrayList<String> _line
 
 public eventType getEventType () { return type; }
 
-public void setSource (String _file, int _lineNumber) {
+public void setSource (String _file, int _linenumber) {
     filename = _file;
-    lineNumber = _lineNumber;
+    linenumber = _linenumber;
 }
 
 public void addValue (String key, String value) {
@@ -109,6 +109,9 @@ public void mergeLines (Event e) {
 }
 
 private static String createElement (String qname, String content) {
+    // level is default null, for example.
+    if (qname == null || content == null)  return "";
+
     StringBuffer sb = new StringBuffer ("<" + qname + "><![CDATA[");
     sb.append (content);
     sb.append ("]]></" + qname + ">");
@@ -116,14 +119,20 @@ private static String createElement (String qname, String content) {
 }
 
 public String toString () {
-    StringBuffer sb = new StringBuffer ("<event xmlns='http://esereno.com/logging#event'>");
+    StringBuffer sb = new StringBuffer ("<event xmlns='http://esereno.com/logging/event'>");
     sb.append (createElement ("filename", filename));
-    sb.append (createElement ("lineNumber", String.valueOf (lineNumber)));
+    sb.append (createElement ("linenumber", String.valueOf (linenumber)));
     sb.append (createElement ("timestamp", timestamp.toString ()));
     sb.append (createElement ("type", type.toString ()));
+    sb.append (createElement ("level", level));
     if (values.containsKey ("code"))
         for (String code : values.get ("code"))
             sb.append (createElement ("code", code));
+    StringBuffer lines = new StringBuffer ();
+    for (String line : rawLines) {
+        lines.append (line);
+    }
+    sb.append (createElement ("lines", lines.toString ()));
     sb.append ("</event>");
     return sb.toString ();
 }

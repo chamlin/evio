@@ -44,7 +44,7 @@ public class Parser {
             Matcher eventTraceMatcher = eventTraceParse.matcher (text);
 
             if (appserverParseMatcher.matches ()) {
-                // TODO this might be overoptimistic.  can know for sure on a continuation.
+                // TODO this might be overoptimistic.  can know for sure on a continuation?
                 e.addValue ("appserver", appserverParseMatcher.group (1));
                 text = appserverParseMatcher.group (2);
     

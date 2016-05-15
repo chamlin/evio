@@ -16,9 +16,9 @@ public static void main (String[] args) throws Exception {
     BufferedReader br = new BufferedReader(new FileReader(filename));
     ArrayList<Event> bufferedEvents = new ArrayList<Event>();
     ArrayList<Event> threadEvent = null;
-    int lineNumber = 0;
+    int linenumber = 0;
     while ((line = br.readLine()) != null) {
-        Event e = p.parse (filename, lineNumber, line);
+        Event e = p.parse (filename, linenumber++, line);
         if (bufferedEvents.isEmpty ()) {
             bufferedEvents.add (e);
             continue;
