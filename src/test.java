@@ -11,7 +11,7 @@ public static void main (String[] args) throws Exception {
 
     Multiinsert inserter = new Multiinsert ("localhost", 8000, "Documents", "admin", "admin");
 
-    String filename = "ErrorLog.txt";
+    String filename = "foo.txt";
 
     String line;
     Parser p = new Parser ();
@@ -28,19 +28,22 @@ public static void main (String[] args) throws Exception {
         }
         switch (e.getEventType ()) {
             case TIMESTAMP:
-                if (e.getAppServerContinued ())
+                if (e.getAppServerContinued ()) {
+                    System.out.println (bufferedEvent + "\n+\n" + e);
                     bufferedEvent.mergeLines (e);
-                else
-                    inserter.insertDoc (e.toString ());
+                    System.out.println (" = " + bufferedEvent + "\n\n");
+                }
+                else {
+                    inserter.insertDoc (bufferedEvent.toString ());
                     bufferedEvent = e;
+                }
                 break;
             default:
                 break;
         }
-        System.out.println("---------------------------------");
-        System.out.println(e);
-        System.out.println("---------------------------------");
     }
+
+    inserter.insertDoc (bufferedEvent.toString ());
 
     inserter.shutdown ();
     

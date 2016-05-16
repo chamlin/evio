@@ -46,9 +46,9 @@ public class Parser {
             if (appserverParseMatcher.matches ()) {
                 // TODO this might be overoptimistic.  can know for sure on a continuation?
                 e.addValue ("appserver", appserverParseMatcher.group (1));
-                text = appserverParseMatcher.group (2);
-    
-                if (text.startsWith ("  ") || text.startsWith ("in "))
+                String newText = appserverParseMatcher.group (2);
+
+                if (newText.startsWith ("  ") || newText.startsWith ("in "))
                     e.setAppServerContinued (true);
             } else if (eventTraceMatcher.matches ()) {
                 e.addValue ("event", eventTraceMatcher.group (1));
@@ -76,7 +76,8 @@ public class Parser {
 
     public static void main (String[] args) {
         Parser p = new Parser ();
-        String line = "2016-02-11 00:16:15.167 Debug: LDAP user s060222 found in login cache";
+        // String line = "2016-02-11 00:16:15.167 Debug: LDAP user s060222 found in login cache";
+        String line = "2015-08-24 10:29:19.891 Info: App-Services:   </error:variable>";
         Event e = p.parse ("foo", 1, line);
         System.out.println (e);
     }
