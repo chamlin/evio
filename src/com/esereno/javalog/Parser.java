@@ -13,7 +13,7 @@ public class Parser {
     private static Pattern timestampParse
         = Pattern.compile ("(\\d\\d\\d\\d-\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d\\.\\d+) (\\S+):\\s+(.*)[\r\n]*");
     private static Pattern appserverContinueParse = Pattern.compile ("([a-zA-Z-_]+): ( in |   ).*");
-    private static Pattern appserverParse = Pattern.compile ("([a-zA-Z-_]+): (.*)");
+    private static Pattern appserverParse = Pattern.compile ("([a-zA-Z-_]+):( .*)");
     private static Pattern threadParse = Pattern.compile ("^(Thread \\d|#\\d)");
     private static Pattern eventTraceParse = Pattern.compile ("\\[Event:id=([^]]+)\\].*");
 
@@ -47,8 +47,9 @@ public class Parser {
                 // TODO this might be overoptimistic.  can know for sure on a continuation?
                 e.addValue ("appserver", appserverParseMatcher.group (1));
                 String newText = appserverParseMatcher.group (2);
+                e.addValue ("newText", newText);
 
-                if (newText.startsWith ("  ") || newText.startsWith ("in "))
+                if (newText.matches ("^[ \\t]{2,}.*") || newText.startsWith ("in "))
                     e.setAppServerContinued (true);
             } else if (eventTraceMatcher.matches ()) {
                 e.addValue ("event", eventTraceMatcher.group (1));
