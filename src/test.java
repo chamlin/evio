@@ -12,7 +12,7 @@ public static void main (String[] args) throws Exception {
     Multiinsert inserter = new Multiinsert ("localhost", 8000, "Documents", "admin", "admin");
 
     // String filename = "ErrorLog.txt";
-    String filename = "foo.txt";
+    String filename = "2XDMP.txt";
 
     String line;
     Parser p = new Parser ();
@@ -23,25 +23,20 @@ public static void main (String[] args) throws Exception {
     int linenumber = 0;
     while ((line = br.readLine()) != null) {
         Event e = p.parse (filename, ++linenumber, line);
+
         if (bufferedEvent == null) {
             bufferedEvent = e;
             continue;
         }
-System.out.println ("\n\n\n\n");
-System.out.println ("linenumber: " + linenumber);
-System.out.println ("e: " + e + "\n");
         switch (e.getEventType ()) {
             case TIMESTAMP:
                 if (e.getAppServerContinued ()) {
-                    System.out.println (bufferedEvent + "\n+\n" + e);
                     bufferedEvent.mergeLines (e);
                     bufferedEvent.setAppServerContinued (true);
-                    System.out.println (" = " + bufferedEvent + "\n\n");
                 }
                 else {
                     if (bufferedEvent.getAppServerContinued ())  bufferedEvent.addValue ("continued", "true");
                     inserter.insertDoc (bufferedEvent.toString ());
-                    System.out.println (">>> shipped");
                     bufferedEvent = e;
                 }
                 break;

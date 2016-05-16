@@ -17,7 +17,7 @@ public class Parser {
     private static Pattern threadParse = Pattern.compile ("^(Thread \\d|#\\d)");
     private static Pattern eventTraceParse = Pattern.compile ("\\[Event:id=([^]]+)\\].*");
 
-    private static Pattern codeParse = Pattern.compile ("(([A-Z]+|X509)-[A-Z]+): ");
+    private static Pattern codeParse = Pattern.compile ("(([A-Z]{2,}|X509)-[A-Z]{2,}): ");
 
     private static Event defaultEvent = new Event ();
 
@@ -39,6 +39,7 @@ public class Parser {
 
             e = new Event (dateTime, Event.eventType.TIMESTAMP, level, s);
             e.setSource (filename, lineNumber);
+            addCodes (e, s);
 
             Matcher appserverParseMatcher = appserverParse.matcher (text);
             Matcher eventTraceMatcher = eventTraceParse.matcher (text);
@@ -62,17 +63,11 @@ public class Parser {
         return e;
     }
 
-    public static List<String> getCodes (String text) {
+    public static void addCodes (Event e, String text) {
 
         List<String> matches = new ArrayList<String> ();
         Matcher codeMatcher = codeParse.matcher (text);
-
-        while (codeMatcher.find()) {
-            matches.add ("code");
-            matches.add (codeMatcher.group (1));
-        }
-
-        return matches;
+        while (codeMatcher.find())    e.addValue ("code", codeMatcher.group (1));
     }
 
     public static void main (String[] args) {
