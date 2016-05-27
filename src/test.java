@@ -11,8 +11,10 @@ public static void main (String[] args) throws Exception {
 
     Multiinsert inserter = new Multiinsert ("localhost", 8000, "Documents", "admin", "admin");
 
-    // String filename = "ErrorLog.txt";
-    String filename = "2XDMP.txt";
+    //String filename = "ErrorLog.txt";
+    // String filename = "2XDMP.txt";
+    // String filename = "foo.txt";
+    String filename = "m13p_ErrorLog.txt";
 
     String line;
     Parser p = new Parser ();
@@ -20,6 +22,7 @@ public static void main (String[] args) throws Exception {
     ArrayList<Event> bufferedEvents = new ArrayList<Event>();
     Event bufferedEvent = null;
     ArrayList<Event> threadEvent = null;
+    int events = 0;
     int linenumber = 0;
     while ((line = br.readLine()) != null) {
         Event e = p.parse (filename, ++linenumber, line);
@@ -41,6 +44,7 @@ public static void main (String[] args) throws Exception {
                 }
                 break;
             default:
+                // huh?
                 break;
         }
     }
@@ -48,6 +52,8 @@ public static void main (String[] args) throws Exception {
     inserter.insertDoc (bufferedEvent.toString ());
 
     inserter.shutdown ();
+
+    System.out.println ("Inserted " + inserter.documentsInserted () + ".");
     
 
 }

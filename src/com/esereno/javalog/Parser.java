@@ -18,6 +18,9 @@ public class Parser {
     private static Pattern eventTraceParse = Pattern.compile ("\\[Event:id=([^]]+)\\].*");
 
     private static Pattern codeParse = Pattern.compile ("(([A-Z]{2,}|X509)-[A-Z]{2,}): ");
+    private static Pattern localMountParse = Pattern.compile ("^Mounted forest (\\S+) locally.*");
+    private static Pattern savedParse = Pattern.compile ("^Saved (\\d+) MB in \\d+ sec at (\\d+) MB/sec to .*/([^/]+)/([^/]+)$");
+    private static Pattern mergedParse = Pattern.compile ("^Merged (\\d+) MB in \\d+ sec at (\\d+) MB/sec to .*/([^/]+)/([^/]+)$");
 
     private static Event defaultEvent = new Event ();
 
@@ -29,11 +32,10 @@ public class Parser {
     public Event parse (String filename, int lineNumber, String s) {
         Event e = defaultEvent;
         Matcher timestampMatcher = timestampParse.matcher (s);
-        // timestamped line, or system line
         if (timestampMatcher.matches ()) {
-
-            String timestamp = timestampMatcher.group (1);
-            LocalDateTime dateTime = LocalDateTime.parse (timestamp.replaceAll (" ", "T"));
+            // timestamped line
+            String timestamp = timestampMatcher.group (1).replaceAll (" ", "T");
+            LocalDateTime dateTime = LocalDateTime.parse (timestamp);
             String level = timestampMatcher.group (2);
             String text = timestampMatcher.group (3);
 
@@ -43,6 +45,9 @@ public class Parser {
 
             Matcher appserverParseMatcher = appserverParse.matcher (text);
             Matcher eventTraceMatcher = eventTraceParse.matcher (text);
+            Matcher localMountMatcher = localMountParse.matcher (text);
+            Matcher savedMatcher = savedParse.matcher (text);
+            Matcher mergedMatcher = mergedParse.matcher (text);
 
             if (appserverParseMatcher.matches ()) {
                 // TODO this might be overoptimistic.  can know for sure on a continuation?
@@ -52,8 +57,25 @@ public class Parser {
 
                 if (newText.matches ("^[ \\t]{2,}.*") || newText.startsWith ("in "))
                     e.setAppServerContinued (true);
+            } else if (localMountMatcher.matches ()) {
+                e.addValue ("forest", localMountMatcher.group (1));
+                e.addValue ("name", "mount");
+            } else if (savedMatcher.matches ()) {
+                e.addValue ("name", "saved");
+                e.addValue ("save-size", savedMatcher.group (1));
+                e.addValue ("save-rate", savedMatcher.group (2));
+                e.addValue ("forest", savedMatcher.group (3));
+                e.addValue ("stand", savedMatcher.group (3) + "/" + savedMatcher.group (4));
+            } else if (mergedMatcher.matches ()) {
+                e.addValue ("name", "merged");
+                e.addValue ("merge-size", mergedMatcher.group (1));
+                e.addValue ("merge-rate", mergedMatcher.group (2));
+                e.addValue ("forest", mergedMatcher.group (3));
+                e.addValue ("stand", mergedMatcher.group (3) + "/" + mergedMatcher.group (4));
             } else if (eventTraceMatcher.matches ()) {
-                e.addValue ("event", eventTraceMatcher.group (1));
+                // should use the trace?
+                e.addValue ("name", "trace");
+                e.addValue ("trace", eventTraceMatcher.group (1));
             }
         } else if (threadParse.matcher (s).matches ()) {
             e = new Event (defaultDateTime, Event.eventType.THREAD, s);

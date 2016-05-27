@@ -21,6 +21,7 @@ import com.marklogic.client.io.StringHandle;
 public class Multiinsert {
 
     
+    int documentsInserted = 0;
     int poolSize = 200;
     ExecutorService pool;
 	DatabaseClient client;
@@ -34,6 +35,11 @@ public class Multiinsert {
 
     public void insertDoc (String doc) {
         pool.execute (new inserter (client, doc));
+        documentsInserted++;
+    }
+
+    public int documentsInserted () {
+        return documentsInserted;
     }
 
     public void shutdown () {
