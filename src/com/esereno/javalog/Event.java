@@ -125,6 +125,7 @@ public String toString () {
     sb.append (createElement ("timestamp", timestamp.toString ()));
     sb.append (createElement ("type", type.toString ()));
     sb.append (createElement ("level", level));
+    if (! values.containsKey ("count"))  sb.append (createElement ("count", "1"));
     for (String key : values.keySet ()) {
         for (String value : values.get (key))
             sb.append (createElement (key, value));
