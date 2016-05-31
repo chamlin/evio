@@ -41,9 +41,11 @@ public class Multiinsert {
         documentsInserted++;
     }
 
-    public void insertDocs (ArrayList<String> docs) {
+    public void insertDocs (ArrayList<Event> docs) {
         documentsInserted += docs.size ();
-        pool.execute (new batchInserter (client, docs));
+        ArrayList<String> docStrings = new ArrayList<String>(docs.size());
+        for (Event e: docs)  docStrings.add (e.toString ());
+        pool.execute (new batchInserter (client, docStrings));
     }
 
     public int documentsInserted () {
