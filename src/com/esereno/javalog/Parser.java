@@ -19,6 +19,7 @@ public class Parser {
 
     private static Pattern codeParse = Pattern.compile ("(([A-Z]{2,}|X509)-[A-Z]{2,}): ");
     private static Pattern localMountParse = Pattern.compile ("^Mounted forest (\\S+) locally.*");
+    private static Pattern unmountParse = Pattern.compile ("^Unmounted forest (\\S+)");
     private static Pattern savedParse = Pattern.compile ("^Saved (\\d+) MB in \\d+ sec at (\\d+) MB/sec to .*/([^/]+)/([^/]+)$");
     private static Pattern mergedParse = Pattern.compile ("^Merged (\\d+) MB in \\d+ sec at (\\d+) MB/sec to .*/([^/]+)/([^/]+)$");
 
@@ -48,6 +49,7 @@ public class Parser {
             Matcher localMountMatcher = localMountParse.matcher (text);
             Matcher savedMatcher = savedParse.matcher (text);
             Matcher mergedMatcher = mergedParse.matcher (text);
+            Matcher unmountMatcher = unmountParse.matcher (text);
 
             if (appserverParseMatcher.matches ()) {
                 // TODO this might be overoptimistic.  can know for sure on a continuation?
@@ -60,16 +62,19 @@ public class Parser {
             } else if (localMountMatcher.matches ()) {
                 e.addValue ("forest", localMountMatcher.group (1));
                 e.addValue ("name", "mount");
+            } else if (unmountMatcher.matches ()) {
+                e.addValue ("forest", unmountMatcher.group (1));
+                e.addValue ("name", "unmount");
             } else if (savedMatcher.matches ()) {
                 e.addValue ("name", "saved");
-                e.addValue ("save-size", savedMatcher.group (1));
-                e.addValue ("save-rate", savedMatcher.group (2));
+                e.addValue ("value", savedMatcher.group (1));
+                e.addValue ("rate", savedMatcher.group (2));
                 e.addValue ("forest", savedMatcher.group (3));
                 e.addValue ("stand", savedMatcher.group (3) + "/" + savedMatcher.group (4));
             } else if (mergedMatcher.matches ()) {
                 e.addValue ("name", "merged");
-                e.addValue ("merge-size", mergedMatcher.group (1));
-                e.addValue ("merge-rate", mergedMatcher.group (2));
+                e.addValue ("value", mergedMatcher.group (1));
+                e.addValue ("rate", mergedMatcher.group (2));
                 e.addValue ("forest", mergedMatcher.group (3));
                 e.addValue ("stand", mergedMatcher.group (3) + "/" + mergedMatcher.group (4));
             } else if (eventTraceMatcher.matches ()) {
