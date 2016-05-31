@@ -22,6 +22,8 @@ public class Parser {
     private static Pattern unmountParse = Pattern.compile ("^Unmounted forest (\\S+)");
     private static Pattern savedParse = Pattern.compile ("^Saved (\\d+) MB in \\d+ sec at (\\d+) MB/sec to .*/([^/]+)/([^/]+)$");
     private static Pattern mergedParse = Pattern.compile ("^Merged (\\d+) MB in \\d+ sec at (\\d+) MB/sec to .*/([^/]+)/([^/]+)$");
+    private static Pattern deletedParse = Pattern.compile ("^Deleted (\\d+) MB in \\d+ sec at (\\d+) MB/sec .*/([^/]+)/([^/]+)$");
+
 
     private static Event defaultEvent = new Event ();
 
@@ -50,6 +52,7 @@ public class Parser {
             Matcher savedMatcher = savedParse.matcher (text);
             Matcher mergedMatcher = mergedParse.matcher (text);
             Matcher unmountMatcher = unmountParse.matcher (text);
+            Matcher deletedMatcher = deletedParse.matcher (text);
 
             if (appserverParseMatcher.matches ()) {
                 // TODO this might be overoptimistic.  can know for sure on a continuation?
@@ -71,6 +74,12 @@ public class Parser {
                 e.addValue ("rate", savedMatcher.group (2));
                 e.addValue ("forest", savedMatcher.group (3));
                 e.addValue ("stand", savedMatcher.group (3) + "/" + savedMatcher.group (4));
+            } else if (deletedMatcher.matches ()) {
+                e.addValue ("name", "deleted");
+                e.addValue ("value", deletedMatcher.group (1));
+                e.addValue ("rate", deletedMatcher.group (2));
+                e.addValue ("forest", deletedMatcher.group (3));
+                e.addValue ("stand", deletedMatcher.group (3) + "/" + deletedMatcher.group (4));
             } else if (mergedMatcher.matches ()) {
                 e.addValue ("name", "merged");
                 e.addValue ("value", mergedMatcher.group (1));
