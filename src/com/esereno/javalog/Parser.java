@@ -23,6 +23,9 @@ public class Parser {
     private static Pattern savedParse = Pattern.compile ("^Saved (\\d+) MB in \\d+ sec at (\\d+) MB/sec to .*/([^/]+)/([^/]+)$");
     private static Pattern mergedParse = Pattern.compile ("^Merged (\\d+) MB in \\d+ sec at (\\d+) MB/sec to .*/([^/]+)/([^/]+)$");
     private static Pattern deletedParse = Pattern.compile ("^Deleted (\\d+) MB in \\d+ sec at (\\d+) MB/sec .*/([^/]+)/([^/]+)$");
+    private static Pattern mergingParse = Pattern.compile ("^Merging (\\d+) MB from (.+) to ([^, ]+).*");
+
+
 
 
     private static Event defaultEvent = new Event ();
@@ -53,6 +56,7 @@ public class Parser {
             Matcher mergedMatcher = mergedParse.matcher (text);
             Matcher unmountMatcher = unmountParse.matcher (text);
             Matcher deletedMatcher = deletedParse.matcher (text);
+            Matcher mergingMatcher = mergingParse.matcher (text);
 
             if (appserverParseMatcher.matches ()) {
                 // TODO this might be overoptimistic.  can know for sure on a continuation?
@@ -86,6 +90,12 @@ public class Parser {
                 e.addValue ("rate", mergedMatcher.group (2));
                 e.addValue ("forest", mergedMatcher.group (3));
                 e.addValue ("stand", mergedMatcher.group (3) + "/" + mergedMatcher.group (4));
+            } else if (mergingMatcher.matches ()) {
+// TODO add timestamp as optional (when did it come in?)
+                e.addValue ("value", mergingMatcher.group (1));
+                String[] oldStands = mergingMatcher.group (2).split ("( and |, and |, )");
+                for (String stand: oldStands)  e.addValue ("stand", stand);
+                e.addValue ("stand", mergingMatcher.group (3));
             } else if (eventTraceMatcher.matches ()) {
                 // should use the trace?
                 e.addValue ("name", "trace");
