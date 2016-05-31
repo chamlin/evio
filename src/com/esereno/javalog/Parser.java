@@ -111,6 +111,8 @@ public class Parser {
                 e.addValue ("stand", mergingMatcher.group (3));
             } else if (text.startsWith ("New configuration state retrieved from foreign cluster")) {
                 e.addValue ("name", "config-retrieved");
+            } else if (text.startsWith ("forest order mismatch")) {
+                e.addValue ("name", "forest-order-mismatch");
             } else if (eventTraceMatcher.matches ()) {
                 // should use the trace?
                 e.addValue ("name", "trace");
