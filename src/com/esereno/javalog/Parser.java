@@ -92,10 +92,13 @@ public class Parser {
                 e.addValue ("stand", mergedMatcher.group (3) + "/" + mergedMatcher.group (4));
             } else if (mergingMatcher.matches ()) {
 // TODO add timestamp as optional (when did it come in?)
+                e.addValue ("name", "merging");
                 e.addValue ("value", mergingMatcher.group (1));
                 String[] oldStands = mergingMatcher.group (2).split ("( and |, and |, )");
                 for (String stand: oldStands)  e.addValue ("stand", stand);
                 e.addValue ("stand", mergingMatcher.group (3));
+            } else if (text.startsWith ("New configuration state retrieved from foreign cluster")) {
+                e.addValue ("name", "config-retrieved");
             } else if (eventTraceMatcher.matches ()) {
                 // should use the trace?
                 e.addValue ("name", "trace");
