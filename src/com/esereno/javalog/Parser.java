@@ -26,8 +26,7 @@ public class Parser {
     private static Pattern deletedParse = Pattern.compile ("^Deleted (\\d+) MB in \\d+ sec at (\\d+) MB/sec .*/([^/]+)/([^/]+)$");
     private static Pattern mergingParse = Pattern.compile ("^Merging (\\d+) MB from (.+) to ([^, ]+).*");
     private static Pattern savingParse = Pattern.compile ("^Saving .*/([^/]+)/([^/]+)$");
-
-
+    private static Pattern foreignMountParse = Pattern.compile ("^Mounted foreign forest (\\S+) on (\\S+).*");
 
 
     private static Event defaultEvent = new Event ();
@@ -61,6 +60,7 @@ public class Parser {
             Matcher deletedMatcher = deletedParse.matcher (text);
             Matcher mergingMatcher = mergingParse.matcher (text);
             Matcher savingMatcher = savingParse.matcher (text);
+            Matcher foreignMountMatcher = foreignMountParse.matcher (text);
 
             if (appserverParseMatcher.matches ()) {
                 // TODO this might be overoptimistic.  can know for sure on a continuation?
@@ -77,6 +77,10 @@ public class Parser {
                 e.addValue ("forest", remoteMountMatcher.group (1));
                 e.addValue ("node", remoteMountMatcher.group (2));
                 e.addValue ("name", "remote-mount");
+            } else if (foreignMountMatcher.matches ()) {
+                e.addValue ("forest", foreignMountMatcher.group (1));
+                e.addValue ("node", foreignMountMatcher.group (2));
+                e.addValue ("name", "foreign-mount");
             } else if (unmountMatcher.matches ()) {
                 e.addValue ("forest", unmountMatcher.group (1));
                 e.addValue ("name", "unmount");
