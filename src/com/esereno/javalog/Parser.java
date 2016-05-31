@@ -19,11 +19,13 @@ public class Parser {
 
     private static Pattern codeParse = Pattern.compile ("(([A-Z]{2,}|X509)-[A-Z]{2,}): ");
     private static Pattern localMountParse = Pattern.compile ("^Mounted forest (\\S+) locally.*");
+    private static Pattern remoteMountParse = Pattern.compile ("^Mounted forest (\\S+) remotely on (.*)");
     private static Pattern unmountParse = Pattern.compile ("^Unmounted forest (\\S+)");
     private static Pattern savedParse = Pattern.compile ("^Saved (\\d+) MB in \\d+ sec at (\\d+) MB/sec to .*/([^/]+)/([^/]+)$");
     private static Pattern mergedParse = Pattern.compile ("^Merged (\\d+) MB in \\d+ sec at (\\d+) MB/sec to .*/([^/]+)/([^/]+)$");
     private static Pattern deletedParse = Pattern.compile ("^Deleted (\\d+) MB in \\d+ sec at (\\d+) MB/sec .*/([^/]+)/([^/]+)$");
     private static Pattern mergingParse = Pattern.compile ("^Merging (\\d+) MB from (.+) to ([^, ]+).*");
+    private static Pattern savingParse = Pattern.compile ("^Saving .*/([^/]+)/([^/]+)$");
 
 
 
@@ -52,11 +54,13 @@ public class Parser {
             Matcher appserverParseMatcher = appserverParse.matcher (text);
             Matcher eventTraceMatcher = eventTraceParse.matcher (text);
             Matcher localMountMatcher = localMountParse.matcher (text);
+            Matcher remoteMountMatcher = remoteMountParse.matcher (text);
             Matcher savedMatcher = savedParse.matcher (text);
             Matcher mergedMatcher = mergedParse.matcher (text);
             Matcher unmountMatcher = unmountParse.matcher (text);
             Matcher deletedMatcher = deletedParse.matcher (text);
             Matcher mergingMatcher = mergingParse.matcher (text);
+            Matcher savingMatcher = savingParse.matcher (text);
 
             if (appserverParseMatcher.matches ()) {
                 // TODO this might be overoptimistic.  can know for sure on a continuation?
@@ -69,9 +73,17 @@ public class Parser {
             } else if (localMountMatcher.matches ()) {
                 e.addValue ("forest", localMountMatcher.group (1));
                 e.addValue ("name", "mount");
+            } else if (remoteMountMatcher.matches ()) {
+                e.addValue ("forest", remoteMountMatcher.group (1));
+                e.addValue ("node", remoteMountMatcher.group (2));
+                e.addValue ("name", "remote-mount");
             } else if (unmountMatcher.matches ()) {
                 e.addValue ("forest", unmountMatcher.group (1));
                 e.addValue ("name", "unmount");
+            } else if (savingMatcher.matches ()) {
+                e.addValue ("name", "saving");
+                e.addValue ("forest", savingMatcher.group (1));
+                e.addValue ("stand", savingMatcher.group (1) + "/" + savingMatcher.group (2));
             } else if (savedMatcher.matches ()) {
                 e.addValue ("name", "saved");
                 e.addValue ("value", savedMatcher.group (1));
