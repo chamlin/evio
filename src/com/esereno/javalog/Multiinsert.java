@@ -3,6 +3,8 @@ package com.esereno.javalog;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.UUID;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -10,6 +12,7 @@ import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.DatabaseClientFactory;
 import com.marklogic.client.document.DocumentDescriptor;
 import com.marklogic.client.document.DocumentUriTemplate;
+import com.marklogic.client.document.DocumentWriteSet;
 import com.marklogic.client.document.XMLDocumentManager;
 import com.marklogic.client.DatabaseClientFactory.Authentication;
 import com.marklogic.client.io.StringHandle;
@@ -22,7 +25,7 @@ public class Multiinsert {
 
     
     int documentsInserted = 0;
-    int poolSize = 200;
+    int poolSize = 50;
     ExecutorService pool;
 	DatabaseClient client;
 
@@ -36,6 +39,11 @@ public class Multiinsert {
     public void insertDoc (String doc) {
         pool.execute (new inserter (client, doc));
         documentsInserted++;
+    }
+
+    public void insertDocs (ArrayList<String> docs) {
+        documentsInserted += docs.size ();
+        pool.execute (new batchInserter (client, docs));
     }
 
     public int documentsInserted () {
@@ -58,6 +66,39 @@ public class Multiinsert {
         System.err.print ("\n");
     }
 
+
+    private class batchInserter implements Runnable {
+
+        private DatabaseClient dbClient = null;
+        private ArrayList<String> strings = null;
+
+        private batchInserter (DatabaseClient _dbClient, ArrayList<String> _strings) {
+             dbClient = _dbClient;
+             strings = _strings;
+        }
+
+        private void insertDocuments () {
+            // create a manager for XML documents
+            XMLDocumentManager docMgr = dbClient.newXMLDocumentManager();
+            docMgr.stopLogging();
+
+            // create a uri template.  This one says "use an XML extension to generate URIs"
+            DocumentUriTemplate uriTemplate = docMgr.newDocumentUriTemplate("xml");
+
+            DocumentWriteSet batch = docMgr.newWriteSet ();
+
+            for (String s: strings)  {
+                batch.add ("/jalopar/data/" + UUID.randomUUID().toString (),  new StringHandle (s));
+            }
+
+            docMgr.write (batch);
+        }
+
+        public void run () {
+            System.out.print (strings);
+            insertDocuments ();
+        }
+    }
 
     private class inserter implements Runnable {
 
