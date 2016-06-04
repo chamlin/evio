@@ -44,8 +44,15 @@ public static void main (String[] args) throws Exception {
 
     String hostname = prop.getProperty ("hostname");
     int port = Integer.valueOf (prop.getProperty ("port"));
+    String database = prop.getProperty ("database");
+    String username = prop.getProperty ("username");
+    String password = prop.getProperty ("password");
+    String batchSizeString = prop.getProperty ("batchsize");
+    int batchSize = batchSizeString == null ? 10 : Integer.valueOf (batchSizeString);
+    String poolSizeString = prop.getProperty ("poolsize");
+    int poolSize = poolSizeString == null ? 10 : Integer.valueOf (poolSizeString);
 
-    Multiinsert inserter = new Multiinsert ("localhost", 8000, "Documents", "admin", "admin");
+    Multiinsert inserter = new Multiinsert (hostname, port, "Documents", "admin", "admin", poolSize);
 
     //String filename = "ErrorLog.txt";
     // String filename = "2XDMP.txt";
@@ -60,10 +67,10 @@ public static void main (String[] args) throws Exception {
     int linenumber = 0;
     while ((line = br.readLine()) != null) {
 
-        if (eventArray.size () > 10)  {
+        if (eventArray.size () >= batchSize)  {
             
             inserter.insertDocs (eventArray);
-            eventArray = new ArrayList<Event>(15);
+            eventArray = new ArrayList<Event>(batchSize+1);
         }
 
         Event e = p.parse (filename, ++linenumber, line);

@@ -25,11 +25,10 @@ public class Multiinsert {
 
     
     int documentsInserted = 0;
-    int poolSize = 50;
     ExecutorService pool;
 	DatabaseClient client;
 
-    public Multiinsert (String host, int port, String db, String un, String pw) {
+    public Multiinsert (String host, int port, String db, String un, String pw, int poolSize) {
 
         pool = java.util.concurrent.Executors.newFixedThreadPool(poolSize);
 
@@ -135,7 +134,7 @@ public class Multiinsert {
 
 	public static void main(String[] args) throws IOException, InterruptedException {
 
-        Multiinsert mi = new Multiinsert ("localhost", 8000, "Documents", "admin", "admin");
+        Multiinsert mi = new Multiinsert ("localhost", 8000, "Documents", "admin", "admin", 10);
 
         System.err.println ("<");
 
