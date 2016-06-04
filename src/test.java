@@ -1,19 +1,49 @@
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.Properties;
+import java.io.InputStream;
 import java.io.FileReader;
 import java.io.BufferedReader;
+import java.io.IOException;
 import com.esereno.javalog.*;
 
 public class test {
 
-public static String[] eventStrings (ArrayList<Event> events) {
-    String[] docStrings = new String[events.size()];
-    return docStrings;
+public static Properties getProperties (String filename) {
+
+    Properties prop = new Properties ();
+    InputStream input = null;
     
+    try {
+        input = test.class.getClassLoader().getResourceAsStream(filename);
+        if (input == null) {
+            System.out.println("Sorry, unable to find " + filename);
+        } else {
+            //load a properties file from class path, inside static method
+            prop.load(input);
+        }
+    } catch (IOException ex) {
+        ex.printStackTrace();
+    } finally {
+        if (input != null) { try { input.close(); } catch (IOException e) { } }
+    }
+
+    return prop;
 }
 
 public static void main (String[] args) throws Exception {
+
+
+    Properties prop = getProperties ("jalopar.config");
+    if (prop.getProperty ("hostname") == null) {
+        System.out.println ("no host!?");
+        System.out.println ("props: " + prop);
+        return;
+    }
+
+    String hostname = prop.getProperty ("hostname");
+    int port = Integer.valueOf (prop.getProperty ("port"));
 
     Multiinsert inserter = new Multiinsert ("localhost", 8000, "Documents", "admin", "admin");
 

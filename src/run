@@ -1,0 +1,2 @@
+javac -Djava.ext.dirs=/Users/chamlin/jars/java-client-api-3.0.5/ com/esereno/javalog/*.java test.java 
+java -Djava.ext.dirs=/Users/chamlin/jars/java-client-api-3.0.5/ -cp . test 
