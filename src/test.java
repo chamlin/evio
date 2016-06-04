@@ -32,15 +32,31 @@ public static Properties getProperties (String filename) {
     return prop;
 }
 
+
 public static void main (String[] args) throws Exception {
 
 
     Properties prop = getProperties ("jalopar.config");
+
+    // probably should check more
     if (prop.getProperty ("hostname") == null) {
         System.out.println ("no host!?");
         System.out.println ("props: " + prop);
         return;
     }
+
+    if (args.length == 0)  {
+        System.out.println ("no input files specified");
+        return;
+    }
+
+    HashMap<String,String> fileKeys = new HashMap<String,String> (args.length);
+    for (String filename: args) {
+        fileKeys.put (filename, filename);
+    }
+    System.out.println (fileKeys);
+
+    if (false) return;
 
     String hostname = prop.getProperty ("hostname");
     int port = Integer.valueOf (prop.getProperty ("port"));
@@ -48,64 +64,66 @@ public static void main (String[] args) throws Exception {
     String username = prop.getProperty ("username");
     String password = prop.getProperty ("password");
     String batchSizeString = prop.getProperty ("batchsize");
-    int batchSize = batchSizeString == null ? 10 : Integer.valueOf (batchSizeString);
+    int batchSize = Integer.valueOf (batchSizeString);
     String poolSizeString = prop.getProperty ("poolsize");
-    int poolSize = poolSizeString == null ? 10 : Integer.valueOf (poolSizeString);
+    int poolSize = Integer.valueOf (poolSizeString);
 
-    Multiinsert inserter = new Multiinsert (hostname, port, "Documents", "admin", "admin", poolSize);
+    Multiinsert inserter = new Multiinsert (hostname, port, database, username, password, poolSize);
 
-    //String filename = "ErrorLog.txt";
-    // String filename = "2XDMP.txt";
-    // String filename = "foo.txt";
-    String filename = "m13p_ErrorLog.txt";
-    ArrayList<Event> eventArray = new ArrayList<Event>(15);
+    int totalInserted = 0;
+    
+    for (String filename: fileKeys.keySet ()) {
+        ArrayList<Event> eventArray = new ArrayList<Event>(15);
 
-    String line;
-    Parser p = new Parser ();
-    BufferedReader br = new BufferedReader(new FileReader(filename));
-    int events = 0;
-    int linenumber = 0;
-    while ((line = br.readLine()) != null) {
+        String line;
+        Parser p = new Parser ();
+        BufferedReader br = new BufferedReader(new FileReader(filename));
+        int events = 0;
+        int linenumber = 0;
+        while ((line = br.readLine()) != null) {
 
-        if (eventArray.size () >= batchSize)  {
-            
-            inserter.insertDocs (eventArray);
-            eventArray = new ArrayList<Event>(batchSize+1);
+            if (eventArray.size () >= batchSize)  {
+                
+                inserter.insertDocs (eventArray);
+                eventArray = new ArrayList<Event>(batchSize+1);
+            }
+
+            Event e = p.parse (filename, ++linenumber, line);
+
+            if (eventArray.size () == 0) {
+                eventArray.add (e);
+                continue;
+            }
+
+            Event bufferedEvent = eventArray.get (eventArray.size () - 1);
+            switch (e.getEventType ()) {
+                case TIMESTAMP:
+                    if (e.getAppServerContinued ()) {
+                        
+                        bufferedEvent.mergeLines (e);
+                        bufferedEvent.setAppServerContinued (true);
+                    }
+                    else {
+                        if (bufferedEvent.getAppServerContinued ())  bufferedEvent.addValue ("continued", "true");
+                        eventArray.add (e);
+                    }
+                    break;
+                default:
+                    // huh?
+                    break;
+            }
         }
 
-        Event e = p.parse (filename, ++linenumber, line);
-
-        if (eventArray.size () == 0) {
-            eventArray.add (e);
-            continue;
-        }
-
-        Event bufferedEvent = eventArray.get (eventArray.size () - 1);
-        switch (e.getEventType ()) {
-            case TIMESTAMP:
-                if (e.getAppServerContinued ()) {
-                    
-                    bufferedEvent.mergeLines (e);
-                    bufferedEvent.setAppServerContinued (true);
-                }
-                else {
-                    if (bufferedEvent.getAppServerContinued ())  bufferedEvent.addValue ("continued", "true");
-                    eventArray.add (e);
-                    // inserter.insertDoc (bufferedEvent.toString ());
-                    // bufferedEvent = e;
-                }
-                break;
-            default:
-                // huh?
-                break;
-        }
+        inserter.insertDocs (eventArray);
+        totalInserted += inserter.documentsInserted ();
+        System.out.println ("Inserted " + inserter.documentsInserted () + " for " + filename + ".");
     }
-
-    inserter.insertDocs (eventArray);
 
     inserter.shutdown ();
 
-    System.out.println ("Inserted " + inserter.documentsInserted () + ".");
+    System.out.println ("Total inserted " + totalInserted + ".");
+
+
     
 
 }

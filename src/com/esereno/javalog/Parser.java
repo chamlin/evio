@@ -12,8 +12,8 @@ public class Parser {
 
     private static Pattern timestampParse
         = Pattern.compile ("(\\d\\d\\d\\d-\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d\\.\\d+) (\\S+):\\s+(.*)[\r\n]*");
-    private static Pattern appserverContinueParse = Pattern.compile ("([a-zA-Z-_]+): ( in |   ).*");
-    private static Pattern appserverParse = Pattern.compile ("([a-zA-Z-_]+):( .*)");
+    private static Pattern appserverContinueParse = Pattern.compile ("([0-9a-zA-Z-_]+): ( in |   ).*");
+    private static Pattern appserverParse = Pattern.compile ("([0-9a-zA-Z-_]+):( .*)");
     private static Pattern threadParse = Pattern.compile ("^(Thread \\d|#\\d)");
     private static Pattern eventTraceParse = Pattern.compile ("\\[Event:id=([^]]+)\\].*");
 
@@ -68,7 +68,7 @@ public class Parser {
                 String newText = appserverParseMatcher.group (2);
                 e.addValue ("newText", newText);
 
-                if (newText.matches ("^[ \\t]{2,}.*") || newText.startsWith ("in "))
+                if (newText.matches ("^[ \\t]{2,}.*") || newText.startsWith (" in "))
                     e.setAppServerContinued (true);
             } else if (localMountMatcher.matches ()) {
                 e.addValue ("forest", localMountMatcher.group (1));
