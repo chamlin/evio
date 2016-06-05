@@ -1,3 +1,5 @@
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -50,14 +52,6 @@ public static void main (String[] args) throws Exception {
         return;
     }
 
-    HashMap<String,String> fileKeys = new HashMap<String,String> (args.length);
-    for (String filename: args) {
-        fileKeys.put (filename, filename);
-    }
-    System.out.println (fileKeys);
-
-    if (false) return;
-
     String hostname = prop.getProperty ("hostname");
     int port = Integer.valueOf (prop.getProperty ("port"));
     String database = prop.getProperty ("database");
@@ -67,6 +61,24 @@ public static void main (String[] args) throws Exception {
     int batchSize = Integer.valueOf (batchSizeString);
     String poolSizeString = prop.getProperty ("poolsize");
     int poolSize = Integer.valueOf (poolSizeString);
+    String keyName = prop.getProperty ("keyname");
+    if (keyName == null)  keyName = "node";
+
+    // set up filename => key mapping (usually node)
+    String keyValue = prop.getProperty ("keyvalue");
+    Pattern keyPattern = null;
+    try { keyPattern = Pattern.compile (prop.getProperty ("keymatch")); } catch (Exception e) { }
+
+    HashMap<String,String> fileKeys = new HashMap<String,String> (args.length);
+    for (String filename: args) {
+        String key = filename;
+        if (keyValue != null)  key = keyValue;
+        else if (keyPattern != null) {
+            Matcher keyMatcher = keyPattern.matcher (filename);
+            if (keyMatcher.find ())  key = keyMatcher.group (1);
+        }
+        fileKeys.put (filename, key);
+    }
 
     Multiinsert inserter = new Multiinsert (hostname, port, database, username, password, poolSize);
 
@@ -74,6 +86,8 @@ public static void main (String[] args) throws Exception {
     
     for (String filename: fileKeys.keySet ()) {
         ArrayList<Event> eventArray = new ArrayList<Event>(15);
+
+        String key = fileKeys.get (filename);
 
         String line;
         Parser p = new Parser ();
@@ -89,6 +103,7 @@ public static void main (String[] args) throws Exception {
             }
 
             Event e = p.parse (filename, ++linenumber, line);
+            e.addValue ("node", key);
 
             if (eventArray.size () == 0) {
                 eventArray.add (e);
@@ -99,7 +114,6 @@ public static void main (String[] args) throws Exception {
             switch (e.getEventType ()) {
                 case TIMESTAMP:
                     if (e.getAppServerContinued ()) {
-                        
                         bufferedEvent.mergeLines (e);
                         bufferedEvent.setAppServerContinued (true);
                     }
