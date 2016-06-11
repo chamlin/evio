@@ -1,0 +1,21 @@
+buildscript {
+  repositories {
+    // ML maven URL
+   mavenCentral()
+  }
+}
+
+plugins {
+  id "com.marklogic.ml-gradle" version "2.0"
+
+  id "java"
+}
+
+dependencies {
+  repositories {
+    // ML maven URL
+   "http://developer.marklogic.com/maven2"
+  }
+    compile  'com.marklogic:java-client-api:3.0.5'
+}
+
