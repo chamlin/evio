@@ -1,11 +1,77 @@
 {
   "database-name" : "%%DATABASE%%",
-  "range-element-index" : [ {
+  "range-element-index" : [
+  {
+    "scalar-type" : "string",
+    "namespace-uri" : "http://esereno.com/logging/event",
+    "localname" : "node",
+    "collation" : "http://marklogic.com/collation/codepoint",
+    "range-value-positions" : false,
+    "invalid-values" : "reject"
+  },
+  {
     "scalar-type" : "dateTime",
     "namespace-uri" : "http://esereno.com/logging/event",
     "localname" : "timestamp",
     "collation" : "",
     "range-value-positions" : false,
     "invalid-values" : "reject"
-  } ]
+  },
+  {
+    "scalar-type" : "string",
+    "namespace-uri" : "http://esereno.com/logging/event",
+    "localname" : "name",
+    "collation" : "http://marklogic.com/collation/codepoint",
+    "range-value-positions" : false,
+    "invalid-values" : "reject"
+  },
+  {
+    "scalar-type" : "string",
+    "namespace-uri" : "http://esereno.com/logging/event",
+    "localname" : "forest",
+    "collation" : "http://marklogic.com/collation/codepoint",
+    "range-value-positions" : false,
+    "invalid-values" : "reject"
+  },
+  {
+    "scalar-type" : "string",
+    "namespace-uri" : "http://esereno.com/logging/event",
+    "localname" : "trace",
+    "collation" : "http://marklogic.com/collation/codepoint",
+    "range-value-positions" : false,
+    "invalid-values" : "reject"
+  },
+  {
+    "scalar-type" : "string",
+    "namespace-uri" : "http://esereno.com/logging/event",
+    "localname" : "stand",
+    "collation" : "http://marklogic.com/collation/codepoint",
+    "range-value-positions" : false,
+    "invalid-values" : "reject"
+  },
+  {
+    "scalar-type" : "int",
+    "namespace-uri" : "http://esereno.com/logging/event",
+    "localname" : "value",
+    "collation" : "",
+    "range-value-positions" : false,
+    "invalid-values" : "reject"
+  },
+  {
+    "scalar-type" : "int",
+    "namespace-uri" : "http://esereno.com/logging/event",
+    "localname" : "rate",
+    "collation" : "",
+    "range-value-positions" : false,
+    "invalid-values" : "reject"
+  },
+  {
+    "scalar-type" : "int",
+    "namespace-uri" : "http://esereno.com/logging/event",
+    "localname" : "count",
+    "collation" : "",
+    "range-value-positions" : false,
+    "invalid-values" : "reject"
+  }
+  ]
 }
