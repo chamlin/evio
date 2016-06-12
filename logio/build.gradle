@@ -1,21 +1,24 @@
-buildscript {
-  repositories {
-    // ML maven URL
-   mavenCentral()
-  }
+apply plugin: 'java'
+
+repositories {
+    maven {
+        url 'http://developer.marklogic.com/maven2'
+        mavenCentral()
+    }
 }
 
-plugins {
-  id "com.marklogic.ml-gradle" version "2.0"
+task dist() << {
+    println 'building the distribution'
+}
 
-  id "java"
+dist {
+    description  = 'dist task'
 }
 
 dependencies {
-  repositories {
-    // ML maven URL
-   "http://developer.marklogic.com/maven2"
-  }
-    compile  'com.marklogic:java-client-api:3.0.5'
+    compile 'com.marklogic:java-client-api:3.0.5'
 }
 
+   // workingDir 'src/main/java'
+   // commandLine 'pwd > /tmp/pwd.out'
+   // commandLine 'javac -Djava.ext.dirs=/Users/chamlin/jars/java-client-api-3.0.5/ com/esereno/evio/*.java test.java'
