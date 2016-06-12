@@ -1,1 +1,5 @@
 *.class
+build
+.gradle
+*.swp
+m13p_ErrorLog.txt
