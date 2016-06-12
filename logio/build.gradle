@@ -1,4 +1,7 @@
-apply plugin: 'java'
+plugins {
+  id 'com.marklogic.ml-gradle' version '2.1.0'
+  id 'java'
+}
 
 repositories {
     maven {

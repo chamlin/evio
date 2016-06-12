@@ -1,0 +1,11 @@
+{
+  "database-name" : "%%DATABASE%%",
+  "range-element-index" : [ {
+    "scalar-type" : "dateTime",
+    "namespace-uri" : "http://esereno.com/logging/event",
+    "localname" : "timestamp",
+    "collation" : "",
+    "range-value-positions" : false,
+    "invalid-values" : "reject"
+  } ]
+}

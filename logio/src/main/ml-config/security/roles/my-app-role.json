@@ -1,0 +1,4 @@
+{
+  "role-name" : "my-app-role",
+  "role" : [ "rest-writer" ]
+}
