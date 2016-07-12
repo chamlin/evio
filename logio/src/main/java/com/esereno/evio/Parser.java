@@ -18,15 +18,28 @@ public class Parser {
     private static Pattern eventTraceParse = Pattern.compile ("\\[Event:id=([^]]+)\\].*");
 
     private static Pattern codeParse = Pattern.compile ("(([A-Z]{2,}|X509)-[A-Z]{2,}): ");
-    private static Pattern localMountParse = Pattern.compile ("^Mounted forest (\\S+) locally.*");
-    private static Pattern remoteMountParse = Pattern.compile ("^Mounted forest (\\S+) remotely on (.*)");
-    private static Pattern unmountParse = Pattern.compile ("^Unmounted forest (\\S+)");
+    private static Pattern localMountParse = Pattern.compile ("^Mounted forest \\S+ locally.*");
+    private static Pattern remoteMountParse = Pattern.compile ("^Mounted forest \\S+ remotely on (.*)");
+    private static Pattern unmountParse = Pattern.compile ("^Unmounted forest \\S+");
     private static Pattern savedParse = Pattern.compile ("^Saved (\\d+) MB in \\d+ sec at (\\d+) MB/sec to .*/([^/]+)/([^/]+)$");
     private static Pattern mergedParse = Pattern.compile ("^Merged (\\d+) MB in \\d+ sec at (\\d+) MB/sec to .*/([^/]+)/([^/]+)$");
     private static Pattern deletedParse = Pattern.compile ("^Deleted (\\d+) MB in \\d+ sec at (\\d+) MB/sec .*/([^/]+)/([^/]+)$");
     private static Pattern mergingParse = Pattern.compile ("^Merging (\\d+) MB from (.+) to ([^, ]+).*");
     private static Pattern savingParse = Pattern.compile ("^Saving .*/([^/]+)/([^/]+)$");
-    private static Pattern foreignMountParse = Pattern.compile ("^Mounted foreign forest (\\S+) on (\\S+).*");
+    private static Pattern foreignMountParse = Pattern.compile ("^Mounted foreign forest \\S+ on (\\S+).*");
+    private static Pattern forestNameParse = Pattern.compile ("[fF]orest ([^:;,\\s]+)");
+
+/*
+
+replication
+replicating
+replicate
+
+foreign master
+as its new master
+
+*/
+
 
 
     private static Event defaultEvent = new Event ();
@@ -61,6 +74,13 @@ public class Parser {
             Matcher mergingMatcher = mergingParse.matcher (text);
             Matcher savingMatcher = savingParse.matcher (text);
             Matcher foreignMountMatcher = foreignMountParse.matcher (text);
+            Matcher forestMatcher = forestNameParse.matcher(text);
+
+
+            // forests
+            while (forestMatcher.find())  { 
+                e.addValue ("forest", forestMatcher.group (1));
+            }
 
             if (appserverParseMatcher.matches ()) {
                 // TODO this might be overoptimistic.  can know for sure on a continuation?
@@ -71,40 +91,32 @@ public class Parser {
                 if (newText.matches ("^[ \\t]{2,}.*") || newText.startsWith (" in "))
                     e.setAppServerContinued (true);
             } else if (localMountMatcher.matches ()) {
-                e.addValue ("forest", localMountMatcher.group (1));
                 e.addValue ("name", "mount");
             } else if (remoteMountMatcher.matches ()) {
-                e.addValue ("forest", remoteMountMatcher.group (1));
-                e.addValue ("node", remoteMountMatcher.group (2));
+                e.addValue ("node", remoteMountMatcher.group (1));
                 e.addValue ("name", "remote-mount");
             } else if (foreignMountMatcher.matches ()) {
-                e.addValue ("forest", foreignMountMatcher.group (1));
-                e.addValue ("node", foreignMountMatcher.group (2));
+                e.addValue ("node", foreignMountMatcher.group (1));
                 e.addValue ("name", "foreign-mount");
             } else if (unmountMatcher.matches ()) {
-                e.addValue ("forest", unmountMatcher.group (1));
                 e.addValue ("name", "unmount");
             } else if (savingMatcher.matches ()) {
                 e.addValue ("name", "saving");
-                e.addValue ("forest", savingMatcher.group (1));
                 e.addValue ("stand", savingMatcher.group (1) + "/" + savingMatcher.group (2));
             } else if (savedMatcher.matches ()) {
                 e.addValue ("name", "saved");
                 e.addValue ("value", savedMatcher.group (1));
                 e.addValue ("rate", savedMatcher.group (2));
-                e.addValue ("forest", savedMatcher.group (3));
                 e.addValue ("stand", savedMatcher.group (3) + "/" + savedMatcher.group (4));
             } else if (deletedMatcher.matches ()) {
                 e.addValue ("name", "deleted");
                 e.addValue ("value", deletedMatcher.group (1));
                 e.addValue ("rate", deletedMatcher.group (2));
-                e.addValue ("forest", deletedMatcher.group (3));
                 e.addValue ("stand", deletedMatcher.group (3) + "/" + deletedMatcher.group (4));
             } else if (mergedMatcher.matches ()) {
                 e.addValue ("name", "merged");
                 e.addValue ("value", mergedMatcher.group (1));
                 e.addValue ("rate", mergedMatcher.group (2));
-                e.addValue ("forest", mergedMatcher.group (3));
                 e.addValue ("stand", mergedMatcher.group (3) + "/" + mergedMatcher.group (4));
             } else if (mergingMatcher.matches ()) {
 // TODO add timestamp as optional (when did it come in?)

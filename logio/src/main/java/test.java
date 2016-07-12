@@ -8,6 +8,8 @@ import java.io.InputStream;
 import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import com.esereno.evio.*;
 
 public class test {
@@ -32,6 +34,12 @@ public static Properties getProperties (String filename) {
     }
 
     return prop;
+}
+
+private static String getStringFromException(Exception ex) {
+    StringWriter errors = new StringWriter();
+    ex.printStackTrace(new PrintWriter(errors));
+    return errors.toString();
 }
 
 
@@ -102,8 +110,15 @@ public static void main (String[] args) throws Exception {
                 eventArray = new ArrayList<Event>(batchSize+1);
             }
 
-            Event e = p.parse (filename, ++linenumber, line);
-            e.addValue ("node", key);
+            Event e = null;
+            try {
+                e = p.parse (filename, ++linenumber, line);
+                e.addValue ("node", key);
+            } catch (Exception ex) {
+                System.out.println (filename + " @# " + linenumber + ": " +line);
+                System.out.println (getStringFromException (ex));
+                System.exit (1);
+            }
 
             if (eventArray.size () == 0) {
                 eventArray.add (e);
