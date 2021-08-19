@@ -71,8 +71,10 @@ foreach my $filename (split /[,;]/, $opts->{f}) {
     # first block is file header
     my $head_block = shift @$blocks;
 
+    # store date in options
+    $opts->{date} = '';
     if ($opts->{D}) {
-        $opts->{date} = $opts->{D}
+        $opts->{date} = $opts->{D} . 'T';
     } elsif ($opts->{y}) {
         $opts->{date} = get_date ($head_block)
     }
@@ -104,7 +106,7 @@ sub get_date {
 
     if ($month) {
         if (length ($year) == 2)  { $year = '20' . $year }
-        $date = $year . '-' . $month . '-' . $day;
+        $date = $year . '-' . $month . '-' . $day . 'T';
     }
 
     return $date;
@@ -138,7 +140,7 @@ sub dump_block {
         my $start_index = 0;
         # unless, repeats . . .
         if ($repeats) { $start_index = 1; }
-        my $row = join ($opts->{s}, ($time, @{$values}[$start_index .. $#{$values}])) . "\n";
+        my $row = join ($opts->{s}, ($opts->{date}.$time, @{$values}[$start_index .. $#{$values}])) . "\n";
         my $got_fh = get_fh (\%fhs, $fn);
         my $fh = $got_fh->{fh};
 
