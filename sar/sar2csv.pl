@@ -19,7 +19,7 @@ my $MAX_FH = 200;
 my $opts = {};
 
 
-getopts ('0ab:d:f:hs:ux', $opts);
+getopts ('0ab:d:f:hs:uxyD:', $opts);
 
 if ($opts->{u} or !exists $opts->{f}) {
     print "    -a    keep average rows\n";
@@ -29,8 +29,10 @@ if ($opts->{u} or !exists $opts->{f}) {
     print "    -f    file---comma/semicolon separated\n";
     print "    -h    header line\n";
     print "    -s    separator\n";
-    print "    -x    separate block with multiple readings (e.g., CPU0, CPU1, ..., all)\n";
     print "    -u    use (this) \n";
+    print "    -x    separate block with multiple readings (e.g., CPU0, CPU1, ..., all)\n";
+    print "    -y    try to get date from head \n";
+    print "    -D    suppy your own date, like 2021-01-05 \n";
     print "    -0    no output (except debug)\n";
     print "\n";
     print "options parsed: ", Dumper ($opts), "\n";
@@ -69,6 +71,12 @@ foreach my $filename (split /[,;]/, $opts->{f}) {
     # first block is file header
     my $head_block = shift @$blocks;
 
+    if ($opts->{D}) {
+        $opts->{date} = $opts->{D}
+    } elsif ($opts->{y}) {
+        $opts->{date} = get_date ($head_block)
+    }
+
     merge_blocks ($blocks);
 
     prep_blocks ($opts, $blocks);
@@ -80,6 +88,27 @@ foreach my $filename (split /[,;]/, $opts->{f}) {
 
 
 ####### subs
+
+sub get_date {
+    my ($head_block) = @_;
+    my $date = '';
+    # try and get the date
+    foreach my $col (@{$head_block->{columns}}) { if ($col =~  /\d+\/\d\d\/\d\d/) { $head_block->{date} = $col } }
+
+    my ($month, $day, $year) = ();
+    if ($head_block->{date} && $head_block->{date} =~ /(\d\d)\/(\d\d)\/(\d\d)/) {
+        ($month, $day, $year) = ($1, $2, $3);
+    } elsif ($head_block->{date} && $head_block->{date} =~ /(\d\d\d\d)\/(\d\d)\/(\d\d)/) {
+        ($month, $day, $year) = ($2, $3, $1);
+    }
+
+    if ($month) {
+        if (length ($year) == 2)  { $year = '20' . $year }
+        $date = $year . '-' . $month . '-' . $day;
+    }
+
+    return $date;
+}
 
 sub filename {
     my ($opts, $block, $values) = @_;
